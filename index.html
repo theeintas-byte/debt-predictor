@@ -3,7 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Household Debt Predictor</title>
+    
+    <!-- Meta Tags for Canva -->
+    <title>Advanced Household Debt Predictor</title>
+    <meta property="og:title" content="Advanced Debt Predictor">
+    <meta property="og:description" content="Interactive econometric prediction tool with real-time model visualization.">
+    <meta property="og:type" content="website">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --primary: #6c5ce7;
@@ -11,6 +18,8 @@
             --bg: #0f0c29;
             --glass: rgba(255, 255, 255, 0.1);
             --text: #ffffff;
+            --positive: #00b894;
+            --negative: #d63031;
         }
         body {
             font-family: 'Inter', -apple-system, sans-serif;
@@ -21,183 +30,202 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            overflow: hidden;
+            padding: 20px;
         }
         .container {
             background: var(--glass);
             backdrop-filter: blur(20px);
-            padding: 40px;
+            padding: 30px;
             border-radius: 24px;
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
             border: 1px solid rgba(255, 255, 255, 0.2);
             width: 100%;
-            max-width: 500px;
-            animation: fadeIn 1s ease-out;
+            max-width: 900px;
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
         }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .controls { flex: 1; min-width: 300px; }
+        .visuals { flex: 1.2; min-width: 350px; }
+        
         h1 {
-            text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             font-weight: 800;
-            letter-spacing: -1px;
             background: linear-gradient(to right, #fff, var(--secondary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            font-size: 1.8em;
         }
-        .input-group {
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 0.9em;
-            color: var(--secondary);
-            font-weight: 600;
-        }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-size: 0.85em; color: var(--secondary); font-weight: 600; }
         input[type="number"] {
             width: 100%;
-            padding: 12px;
+            padding: 10px;
             background: rgba(0, 0, 0, 0.3);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
+            border-radius: 10px;
             color: #fff;
-            font-size: 1em;
             outline: none;
-            transition: border 0.3s;
             box-sizing: border-box;
         }
-        input:focus {
-            border-color: var(--primary);
-        }
         .switch-group {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 25px;
-            padding: 15px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 15px; padding: 10px; background: rgba(255, 255, 255, 0.05); border-radius: 10px;
         }
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 60px;
-            height: 34px;
-        }
+        .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #444;
-            transition: .4s;
-            border-radius: 34px;
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #444; transition: .4s; border-radius: 34px;
         }
         .slider:before {
-            position: absolute;
-            content: "";
-            height: 26px; width: 26px;
-            left: 4px; bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
+            position: absolute; content: ""; height: 20px; width: 20px;
+            left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%;
         }
         input:checked + .slider { background-color: var(--primary); }
-        input:checked + .slider:before { transform: translateX(26px); }
+        input:checked + .slider:before { transform: translateX(24px); }
+
+        .equation-box {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 15px;
+            border-radius: 12px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.8em;
+            margin-top: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #a29bfe;
+            line-height: 1.6;
+        }
+        .equation-val { color: #fff; font-weight: bold; }
 
         .result-panel {
-            margin-top: 40px;
             text-align: center;
-            padding: 25px;
+            padding: 20px;
             background: linear-gradient(135deg, rgba(108, 92, 231, 0.2), rgba(162, 155, 254, 0.1));
             border-radius: 20px;
-            border: 1px solid rgba(108, 92, 231, 0.3);
+            margin-bottom: 20px;
         }
-        .result-label {
-            font-size: 0.8em;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: var(--secondary);
-            margin-bottom: 10px;
-        }
-        .result-value {
-            font-size: 2.5em;
-            font-weight: 800;
-            color: #fff;
-            text-shadow: 0 0 20px rgba(108, 92, 231, 0.5);
-        }
-        .unit { font-size: 0.4em; margin-left: 5px; color: var(--secondary); }
+        .result-label { font-size: 0.7em; text-transform: uppercase; letter-spacing: 2px; color: var(--secondary); }
+        .result-value { font-size: 2em; font-weight: 800; color: #fff; }
+
+        #chartContainer { height: 250px; position: relative; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>Debt Predictor</h1>
-        
-        <div class="input-group">
-            <label>Monthly Income (rshhinc11)</label>
-            <input type="number" id="income" value="25000" oninput="calculate()">
+        <div class="controls">
+            <h1>Debt Predictor</h1>
+            
+            <div class="input-group">
+                <label>Monthly Income (β₁=4.51)</label>
+                <input type="number" id="income" value="30000" oninput="updateAll()">
+            </div>
+
+            <div class="input-group">
+                <label>Housing/Land Value (β₂=0.03)</label>
+                <input type="number" id="assets" value="1000000" oninput="updateAll()">
+            </div>
+
+            <div class="input-group">
+                <label>Age (β₃=-1615)</label>
+                <input type="number" id="age" value="40" oninput="updateAll()">
+            </div>
+
+            <div class="switch-group">
+                <label>Ag Sector? (β₄=-24390)</label>
+                <label class="switch">
+                    <input type="checkbox" id="agsector" onchange="updateAll()">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="equation-box" id="equation">
+                Loading model...
+            </div>
         </div>
 
-        <div class="input-group">
-            <label>Housing/Land Value (val_houseland)</label>
-            <input type="number" id="assets" value="500000" oninput="calculate()">
-        </div>
-
-        <div class="input-group">
-            <label>Age of Household Head</label>
-            <input type="number" id="age" value="45" oninput="calculate()">
-        </div>
-
-        <div class="switch-group">
-            <label>Agriculture Sector?</label>
-            <label class="switch">
-                <input type="checkbox" id="agsector" onchange="calculate()">
-                <span class="slider"></span>
-            </label>
-        </div>
-
-        <div class="result-panel">
-            <div class="result-label">Predicted Total Debt</div>
-            <div class="result-value" id="result">0<span class="unit">Units</span></div>
+        <div class="visuals">
+            <div class="result-panel">
+                <div class="result-label">Predicted Total Debt</div>
+                <div class="result-value" id="result">0</div>
+            </div>
+            
+            <div id="chartContainer">
+                <canvas id="contributionChart"></canvas>
+            </div>
         </div>
     </div>
 
     <script>
-        function calculate() {
-            // OLS Coefficients from our model
-            const intercept = 121700;
-            const b_income = 4.5087;
-            const b_assets = 0.0286;
-            const b_age = -1614.8055;
-            const b_agsector = -24390;
+        let myChart;
+        const coeffs = {
+            intercept: 121700,
+            income: 4.5087,
+            assets: 0.0286,
+            age: -1614.8055,
+            agsector: -24390
+        };
 
-            // Get values
-            const income = parseFloat(document.getElementById('income').value) || 0;
-            const assets = parseFloat(document.getElementById('assets').value) || 0;
-            const age = parseFloat(document.getElementById('age').value) || 0;
-            const isAg = document.getElementById('agsector').checked;
-
-            // Calculate
-            let prediction = intercept + 
-                             (income * b_income) + 
-                             (assets * b_assets) + 
-                             (age * b_age);
-            
-            if (isAg) {
-                prediction += b_agsector;
-            }
-
-            // Display (Format as currency)
-            const resultElement = document.getElementById('result');
-            resultElement.innerHTML = Math.max(0, prediction).toLocaleString(undefined, {maximumFractionDigits: 0}) + '<span class="unit">Units</span>';
+        function initChart() {
+            const ctx = document.getElementById('contributionChart').getContext('2d');
+            myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Base', 'Income', 'Assets', 'Age', 'Sector'],
+                    datasets: [{
+                        label: 'Contribution to Debt',
+                        data: [0, 0, 0, 0, 0],
+                        backgroundColor: ['#636e72', '#00b894', '#00cec9', '#d63031', '#e17055'],
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#fff' } },
+                        y: { ticks: { color: '#fff' } }
+                    }
+                }
+            });
         }
 
-        // Initial calc
-        calculate();
+        function updateAll() {
+            const incomeVal = parseFloat(document.getElementById('income').value) || 0;
+            const assetsVal = parseFloat(document.getElementById('assets').value) || 0;
+            const ageVal = parseFloat(document.getElementById('age').value) || 0;
+            const isAg = document.getElementById('agsector').checked;
+
+            const c_income = incomeVal * coeffs.income;
+            const c_assets = assetsVal * coeffs.assets;
+            const c_age = ageVal * coeffs.age;
+            const c_ag = isAg ? coeffs.agsector : 0;
+
+            const total = Math.max(0, coeffs.intercept + c_income + c_assets + c_age + c_ag);
+
+            // Update Result
+            document.getElementById('result').innerText = total.toLocaleString(undefined, {maximumFractionDigits: 0}) + ' Units';
+
+            // Update Equation
+            document.getElementById('equation').innerHTML = `
+                <span class="equation-val">${coeffs.intercept.toLocaleString()}</span> (Base) <br>
+                + (<span class="equation-val">${coeffs.income.toFixed(2)}</span> × ${incomeVal.toLocaleString()}) <br>
+                + (<span class="equation-val">${coeffs.assets.toFixed(2)}</span> × ${assetsVal.toLocaleString()}) <br>
+                + (<span class="equation-val">${coeffs.age.toFixed(0)}</span> × ${ageVal}) <br>
+                ${isAg ? '+ (<span class="equation-val">' + coeffs.agsector.toLocaleString() + '</span> × 1)' : '+ (0 × 0)'} <br>
+                = <span style="color:#fff; font-weight:800; font-size:1.2em;">${total.toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
+            `;
+
+            // Update Chart
+            myChart.data.datasets[0].data = [coeffs.intercept, c_income, c_assets, c_age, c_ag];
+            myChart.update();
+        }
+
+        initChart();
+        updateAll();
     </script>
 </body>
 </html>
